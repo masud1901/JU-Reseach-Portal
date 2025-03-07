@@ -13,13 +13,33 @@ import {
   FileText,
   Trophy,
   User,
+  Mail,
 } from "lucide-react";
+import { useAuth } from "../../../supabase/auth";
+import ImportPublicationsButton from "./ImportPublicationsButton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function ProfessorDetail() {
   const { id } = useParams<{ id: string }>();
   const [professor, setProfessor] = useState<Professor | null>(null);
   const [publications, setPublications] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [connectMessage, setConnectMessage] = useState("");
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -27,6 +47,12 @@ export default function ProfessorDetail() {
       fetchPublications(id);
     }
   }, [id]);
+
+  useEffect(() => {
+    if (user && professor) {
+      setIsOwner(user.id === professor.user_id);
+    }
+  }, [user, professor]);
 
   async function fetchProfessor(professorId: string) {
     try {
@@ -68,6 +94,52 @@ export default function ProfessorDetail() {
       }
     } catch (error) {
       console.error("Error fetching publications:", error);
+    }
+  }
+
+  async function sendConnectionRequest() {
+    if (!user || !professor) return;
+
+    try {
+      setIsConnecting(true);
+
+      const { error } = await supabase.from("connection_requests").insert({
+        from_user_id: user.id,
+        to_user_id: professor.user_id,
+        message: connectMessage,
+        status: "pending",
+      });
+
+      if (error) {
+        if (error.code === "23505") {
+          // Unique violation - connection request already exists
+          toast({
+            title: "Connection request already sent",
+            description:
+              "You have already sent a connection request to this professor.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Connection request sent",
+          description:
+            "Your connection request has been sent to the professor.",
+        });
+        setIsDialogOpen(false);
+      }
+    } catch (error) {
+      console.error("Error sending connection request:", error);
+      toast({
+        title: "Failed to send connection request",
+        description:
+          "There was an error sending your connection request. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConnecting(false);
     }
   }
 
@@ -120,28 +192,82 @@ export default function ProfessorDetail() {
                   {professor.department}
                 </p>
 
-                <div className="flex items-center gap-2 mb-6">
+                <div className="flex items-center gap-2 mb-4">
                   <Trophy className="h-5 w-5 text-amber-500" />
                   <span className="font-semibold">
                     {professor.ranking_points} points
                   </span>
                 </div>
 
-                {professor.google_scholar_id && (
-                  <Button
-                    variant="outline"
-                    className="mb-6 w-full"
-                    onClick={() =>
-                      window.open(
-                        `https://scholar.google.com/citations?user=${professor.google_scholar_id}`,
-                        "_blank",
-                      )
-                    }
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Google Scholar Profile
-                  </Button>
-                )}
+                <div className="flex flex-wrap gap-2 mb-6 justify-center">
+                  {professor.badge && (
+                    <Badge variant="outline">{professor.badge}</Badge>
+                  )}
+                  {professor.seeking_students && (
+                    <Badge variant="secondary">Seeking Students</Badge>
+                  )}
+                </div>
+
+                <div className="space-y-2 mb-6 w-full">
+                  {professor.google_scholar_id && (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() =>
+                        window.open(
+                          `https://scholar.google.com/citations?user=${professor.google_scholar_id}`,
+                          "_blank",
+                        )
+                      }
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Google Scholar Profile
+                    </Button>
+                  )}
+
+                  {(isOwner || user?.email === "admin@example.com") && (
+                    <ImportPublicationsButton
+                      professorId={professor.id}
+                      onSuccess={() => fetchPublications(professor.id)}
+                    />
+                  )}
+
+                  {user && !isOwner && (
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="w-full">
+                          <Mail className="mr-2 h-4 w-4" />
+                          Connect
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>
+                            Connect with {professor.name}
+                          </DialogTitle>
+                          <DialogDescription>
+                            Send a message to introduce yourself and explain why
+                            you'd like to connect.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <Textarea
+                          placeholder="Hello, I'm interested in your research on..."
+                          value={connectMessage}
+                          onChange={(e) => setConnectMessage(e.target.value)}
+                          className="min-h-[100px]"
+                        />
+                        <DialogFooter>
+                          <Button
+                            onClick={sendConnectionRequest}
+                            disabled={isConnecting}
+                          >
+                            {isConnecting ? "Sending..." : "Send Request"}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
 
                 <div className="w-full">
                   <h3 className="text-sm font-medium mb-2 text-left">

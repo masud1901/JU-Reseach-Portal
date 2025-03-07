@@ -7,16 +7,15 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
+import { Student } from "@/types/professor";
 import { Link } from "react-router-dom";
-import { Professor } from "@/types/professor";
 
-interface ProfessorCardProps {
-  professor: Professor;
+interface StudentCardProps {
+  student: Student;
 }
 
-export default function ProfessorCard({ professor }: ProfessorCardProps) {
-  const initials = professor.name
+export default function StudentCard({ student }: StudentCardProps) {
+  const initials = student.name
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -29,55 +28,46 @@ export default function ProfessorCard({ professor }: ProfessorCardProps) {
           <div className="flex items-center space-x-4">
             <Avatar className="h-12 w-12 border-2 border-primary/10">
               <AvatarImage
-                src={`https://api.dicebear.com/7.x/initials/svg?seed=${professor.name}`}
-                alt={professor.name}
+                src={`https://api.dicebear.com/7.x/initials/svg?seed=${student.name}`}
+                alt={student.name}
               />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold">{professor.name}</h3>
-                <div className="flex items-center gap-1">
-                  {professor.is_verified && (
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  )}
-                  {professor.seeking_students && (
-                    <Badge variant="secondary" className="text-xs">
-                      Seeking Students
-                    </Badge>
-                  )}
-                </div>
+                <h3 className="text-lg font-semibold">{student.name}</h3>
+                {student.badge && (
+                  <Badge variant="outline" className="text-xs">
+                    {student.badge}
+                  </Badge>
+                )}
               </div>
               <p className="text-sm text-muted-foreground">
-                {professor.department}
+                {student.department}
               </p>
             </div>
           </div>
-          <Badge variant="outline" className="flex items-center gap-1">
-            <span className="font-semibold">{professor.ranking_points}</span>
-            <span className="text-xs">points</span>
-          </Badge>
         </div>
       </CardHeader>
       <CardContent>
         <div className="mt-2">
           <h4 className="text-sm font-medium mb-1">Research Interests</h4>
           <div className="flex flex-wrap gap-1">
-            {professor.research_interests.map((interest, i) => (
+            {student.research_interests.map((interest, i) => (
               <Badge key={i} variant="secondary" className="text-xs">
                 {interest}
               </Badge>
             ))}
           </div>
         </div>
-        {professor.bio && (
+        {student.bio && (
           <p className="text-sm text-muted-foreground mt-4 line-clamp-3">
-            {professor.bio}
+            {student.bio}
           </p>
         )}
       </CardContent>
       <CardFooter>
-        <Link to={`/professors/${professor.id}`} className="w-full">
+        <Link to={`/students/${student.id}`} className="w-full">
           <Button variant="outline" className="w-full">
             View Profile
           </Button>

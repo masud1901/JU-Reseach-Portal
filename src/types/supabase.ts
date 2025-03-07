@@ -9,7 +9,214 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      connection_requests: {
+        Row: {
+          created_at: string | null
+          from_user_id: string
+          id: string
+          message: string | null
+          status: string
+          to_user_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          from_user_id: string
+          id?: string
+          message?: string | null
+          status?: string
+          to_user_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          from_user_id?: string
+          id?: string
+          message?: string | null
+          status?: string
+          to_user_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      departments: {
+        Row: {
+          created_at: string | null
+          faculty_id: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          faculty_id?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          faculty_id?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faculties: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      professors: {
+        Row: {
+          badge: string | null
+          bio: string | null
+          created_at: string | null
+          department: string
+          google_scholar_id: string | null
+          id: string
+          is_verified: boolean | null
+          name: string
+          ranking_points: number | null
+          research_interests: string[]
+          seeking_students: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          badge?: string | null
+          bio?: string | null
+          created_at?: string | null
+          department: string
+          google_scholar_id?: string | null
+          id?: string
+          is_verified?: boolean | null
+          name: string
+          ranking_points?: number | null
+          research_interests: string[]
+          seeking_students?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          badge?: string | null
+          bio?: string | null
+          created_at?: string | null
+          department?: string
+          google_scholar_id?: string | null
+          id?: string
+          is_verified?: boolean | null
+          name?: string
+          ranking_points?: number | null
+          research_interests?: string[]
+          seeking_students?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      publications: {
+        Row: {
+          authors: string[]
+          citation_count: number | null
+          created_at: string | null
+          id: string
+          journal: string | null
+          professor_id: string | null
+          title: string
+          updated_at: string | null
+          url: string | null
+          year: number | null
+        }
+        Insert: {
+          authors: string[]
+          citation_count?: number | null
+          created_at?: string | null
+          id?: string
+          journal?: string | null
+          professor_id?: string | null
+          title: string
+          updated_at?: string | null
+          url?: string | null
+          year?: number | null
+        }
+        Update: {
+          authors?: string[]
+          citation_count?: number | null
+          created_at?: string | null
+          id?: string
+          journal?: string | null
+          professor_id?: string | null
+          title?: string
+          updated_at?: string | null
+          url?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publications_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          badge: string | null
+          bio: string | null
+          created_at: string | null
+          department: string
+          id: string
+          name: string
+          research_interests: string[]
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          badge?: string | null
+          bio?: string | null
+          created_at?: string | null
+          department: string
+          id?: string
+          name: string
+          research_interests: string[]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          badge?: string | null
+          bio?: string | null
+          created_at?: string | null
+          department?: string
+          id?: string
+          name?: string
+          research_interests?: string[]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
