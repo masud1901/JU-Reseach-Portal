@@ -317,6 +317,39 @@ export type Database = {
         }
         Relationships: []
       }
+      student_research_keywords: {
+        Row: {
+          created_at: string | null
+          research_keyword_id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          research_keyword_id: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string | null
+          research_keyword_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_research_keywords_research_keyword_id_fkey"
+            columns: ["research_keyword_id"]
+            isOneToOne: false
+            referencedRelation: "research_keywords"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_research_keywords_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           badge: string | null
@@ -366,9 +399,48 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_professor_keyword: {
+        Args: {
+          p_id: string
+          keyword_text: string
+        }
+        Returns: undefined
+      }
+      add_student_keyword: {
+        Args: {
+          s_id: string
+          keyword_text: string
+        }
+        Returns: undefined
+      }
       calculate_ranking_points: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      get_professor_keywords: {
+        Args: {
+          professor_id: string
+        }
+        Returns: {
+          keyword_id: string
+          keyword: string
+        }[]
+      }
+      get_research_keywords: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          keyword: string
+        }[]
+      }
+      get_student_keywords: {
+        Args: {
+          student_id: string
+        }
+        Returns: {
+          keyword_id: string
+          keyword: string
+        }[]
       }
     }
     Enums: {

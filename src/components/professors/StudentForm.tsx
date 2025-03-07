@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import ResearchKeywordSelector from "./ResearchKeywordSelector";
 
 export default function StudentForm() {
   const { user } = useAuth();
@@ -96,30 +96,7 @@ export default function StudentForm() {
     setFormData({ ...formData, department: value });
   };
 
-  const handleAddInterest = () => {
-    if (
-      formData.research_interest.trim() !== "" &&
-      !formData.research_interests.includes(formData.research_interest.trim())
-    ) {
-      setFormData({
-        ...formData,
-        research_interests: [
-          ...formData.research_interests,
-          formData.research_interest.trim(),
-        ],
-        research_interest: "",
-      });
-    }
-  };
-
-  const handleRemoveInterest = (interest: string) => {
-    setFormData({
-      ...formData,
-      research_interests: formData.research_interests.filter(
-        (i) => i !== interest,
-      ),
-    });
-  };
+  // Research interests are now handled by the ResearchKeywordSelector component
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,21 +114,25 @@ export default function StudentForm() {
     try {
       setLoading(true);
 
+      // Get department ID
+      const { data: deptData, error: deptError } = await supabase
+        .from("departments")
+        .select("id")
+        .eq("name", formData.department)
+        .single();
+
+      if (deptError) throw deptError;
+
+      // Create student without research interests
       const { data, error } = await supabase
         .from("students")
         .insert([
           {
             user_id: user.id,
             name: formData.name,
-            department_id: (
-              await supabase
-                .from("departments")
-                .select("id")
-                .eq("name", formData.department)
-                .single()
-            ).data?.id,
+            department_id: deptData.id,
             bio: formData.bio,
-            research_interests: formData.research_interests,
+            research_interests: formData.research_interests, // Keep this for backward compatibility
           },
         ])
         .select();
@@ -161,6 +142,21 @@ export default function StudentForm() {
       }
 
       if (data && data.length > 0) {
+        // Add research keywords using the edge function
+        if (formData.research_interests.length > 0) {
+          const { error: keywordError } = await supabase.functions.invoke(
+            "add_student_keywords",
+            {
+              body: {
+                studentId: data[0].id,
+                keywords: formData.research_interests,
+              },
+            },
+          );
+
+          if (keywordError) throw keywordError;
+        }
+
         navigate(`/students/${data[0].id}`);
       }
     } catch (error) {
@@ -237,43 +233,12 @@ export default function StudentForm() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="research_interest">Research Interests</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="research_interest"
-                  name="research_interest"
-                  value={formData.research_interest}
-                  onChange={handleChange}
-                  placeholder="Add a research interest"
-                />
-                <Button type="button" onClick={handleAddInterest}>
-                  Add
-                </Button>
-              </div>
-              {formData.research_interests.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.research_interests.map((interest, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="pl-2 pr-1 py-1"
-                    >
-                      {interest}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-4 w-4 ml-1"
-                        onClick={() => handleRemoveInterest(interest)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ResearchKeywordSelector
+              selectedKeywords={formData.research_interests}
+              onChange={(keywords) =>
+                setFormData({ ...formData, research_interests: keywords })
+              }
+            />
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={loading} className="w-full">
