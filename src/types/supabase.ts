@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       connection_requests: {
         Row: {
           created_at: string | null
@@ -127,10 +151,9 @@ export type Database = {
       }
       professors: {
         Row: {
-          badge: string | null
           bio: string | null
           created_at: string | null
-          department: string | null
+          department_id: string | null
           google_scholar_id: string | null
           id: string
           is_verified: boolean | null
@@ -140,12 +163,12 @@ export type Database = {
           seeking_students: boolean | null
           updated_at: string | null
           user_id: string | null
+          verification_badge_type: string | null
         }
         Insert: {
-          badge?: string | null
           bio?: string | null
           created_at?: string | null
-          department?: string | null
+          department_id?: string | null
           google_scholar_id?: string | null
           id?: string
           is_verified?: boolean | null
@@ -155,12 +178,12 @@ export type Database = {
           seeking_students?: boolean | null
           updated_at?: string | null
           user_id?: string | null
+          verification_badge_type?: string | null
         }
         Update: {
-          badge?: string | null
           bio?: string | null
           created_at?: string | null
-          department?: string | null
+          department_id?: string | null
           google_scholar_id?: string | null
           id?: string
           is_verified?: boolean | null
@@ -170,8 +193,17 @@ export type Database = {
           seeking_students?: boolean | null
           updated_at?: string | null
           user_id?: string | null
+          verification_badge_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "professors_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       publication_authors: {
         Row: {
@@ -227,50 +259,45 @@ export type Database = {
       }
       publications: {
         Row: {
-          authors: string[] | null
           citation_count: number | null
           created_at: string | null
           id: string
-          journal: string | null
-          professor_id: string | null
+          journal_name: string | null
+          publication_date: string | null
+          publication_type: string | null
+          publication_year: number | null
+          publisher: string | null
           title: string | null
           updated_at: string | null
           url: string | null
-          year: number | null
         }
         Insert: {
-          authors?: string[] | null
           citation_count?: number | null
           created_at?: string | null
           id?: string
-          journal?: string | null
-          professor_id?: string | null
+          journal_name?: string | null
+          publication_date?: string | null
+          publication_type?: string | null
+          publication_year?: number | null
+          publisher?: string | null
           title?: string | null
           updated_at?: string | null
           url?: string | null
-          year?: number | null
         }
         Update: {
-          authors?: string[] | null
           citation_count?: number | null
           created_at?: string | null
           id?: string
-          journal?: string | null
-          professor_id?: string | null
+          journal_name?: string | null
+          publication_date?: string | null
+          publication_type?: string | null
+          publication_year?: number | null
+          publisher?: string | null
           title?: string | null
           updated_at?: string | null
           url?: string | null
-          year?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "publications_professor_id_fkey"
-            columns: ["professor_id"]
-            isOneToOne: false
-            referencedRelation: "professors"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       research_keywords: {
         Row: {
@@ -295,7 +322,7 @@ export type Database = {
           badge: string | null
           bio: string | null
           created_at: string | null
-          department: string | null
+          department_id: string | null
           id: string
           name: string | null
           research_interests: string[] | null
@@ -306,7 +333,7 @@ export type Database = {
           badge?: string | null
           bio?: string | null
           created_at?: string | null
-          department?: string | null
+          department_id?: string | null
           id?: string
           name?: string | null
           research_interests?: string[] | null
@@ -317,21 +344,32 @@ export type Database = {
           badge?: string | null
           bio?: string | null
           created_at?: string | null
-          department?: string | null
+          department_id?: string | null
           id?: string
           name?: string | null
           research_interests?: string[] | null
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "students_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_ranking_points: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

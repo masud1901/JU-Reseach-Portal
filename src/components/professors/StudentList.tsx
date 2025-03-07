@@ -27,7 +27,7 @@ export default function StudentList() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [departments, setDepartments] = useState<string[]>([]);
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
 
   useEffect(() => {
@@ -80,9 +80,10 @@ export default function StudentList() {
           interest.toLowerCase().includes(searchQuery.toLowerCase()),
         );
 
-      // Filter by department
+      // Filter by department name
       const matchesDepartment =
-        selectedDepartment === "" || student.department === selectedDepartment;
+        selectedDepartment === "all" ||
+        student.department === selectedDepartment;
 
       return matchesSearch && matchesDepartment;
     })
@@ -147,7 +148,7 @@ export default function StudentList() {
                         <SelectValue placeholder="All Departments" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Departments</SelectItem>
+                        <SelectItem value="all">All Departments</SelectItem>
                         {departments.map((dept) => (
                           <SelectItem key={dept} value={dept}>
                             {dept}

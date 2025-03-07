@@ -15,6 +15,7 @@ import AuthLayout from "./AuthLayout";
 import { LogIn } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, User } from "lucide-react";
+import { supabase } from "../../../supabase/supabase";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -38,6 +39,19 @@ export default function LoginForm() {
 
       // Check if the user has the correct profile type
       if (data?.user) {
+        // Check if user is an admin
+        const { data: adminData } = await supabase
+          .from("admin_users")
+          .select("*")
+          .eq("email", data.user.email)
+          .single();
+
+        if (adminData) {
+          // Admin users can access the admin dashboard
+          navigate("/admin");
+          return;
+        }
+
         if (userType === "professor") {
           const { data: professorData, error: professorError } = await supabase
             .from("professors")

@@ -19,7 +19,7 @@ export default function LeaderboardPage() {
   const [professors, setProfessors] = useState<Professor[]>([]);
   const [loading, setLoading] = useState(true);
   const [departments, setDepartments] = useState<string[]>([]);
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
 
   useEffect(() => {
     fetchProfessors();
@@ -31,12 +31,12 @@ export default function LeaderboardPage() {
       setLoading(true);
       let query = supabase
         .from("professors")
-        .select("*")
+        .select("*, departments!inner(name)")
         .order("ranking_points", { ascending: false });
 
       // Apply department filter if selected
-      if (selectedDepartment) {
-        query = query.eq("department", selectedDepartment);
+      if (selectedDepartment && selectedDepartment !== "all") {
+        query = query.eq("departments.name", selectedDepartment);
       }
 
       const { data, error } = await query;
@@ -46,7 +46,12 @@ export default function LeaderboardPage() {
       }
 
       if (data) {
-        setProfessors(data as Professor[]);
+        // Transform the data to match the expected Professor type
+        const transformedData = data.map((prof) => ({
+          ...prof,
+          department: prof.departments?.name || "",
+        }));
+        setProfessors(transformedData as Professor[]);
       }
     } catch (error) {
       console.error("Error fetching professors:", error);
@@ -73,7 +78,8 @@ export default function LeaderboardPage() {
 
   const filteredProfessors = professors.filter(
     (professor) =>
-      selectedDepartment === "" || professor.department === selectedDepartment,
+      selectedDepartment === "all" ||
+      professor.department === selectedDepartment,
   );
 
   const getInitials = (name: string) => {
@@ -117,7 +123,7 @@ export default function LeaderboardPage() {
             <SelectValue placeholder="All Departments" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Departments</SelectItem>
+            <SelectItem value="all">All Departments</SelectItem>
             {departments.map((dept) => (
               <SelectItem key={dept} value={dept}>
                 {dept}

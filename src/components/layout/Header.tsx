@@ -41,10 +41,15 @@ export default function Header() {
               <Button variant="ghost">Connections</Button>
             </Link>
           )}
-          {user && (
-            <Link to="/admin">
-              <Button variant="ghost">Admin</Button>
-            </Link>
+          {user && user.email === "akmolmasud5@gmail.com" && (
+            <>
+              <Link to="/admin">
+                <Button variant="ghost">Admin</Button>
+              </Link>
+              <Link to="/database-explorer">
+                <Button variant="ghost">Database Explorer</Button>
+              </Link>
+            </>
           )}
 
           {user ? (

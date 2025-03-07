@@ -18,6 +18,7 @@ import StudentForm from "./components/professors/StudentForm";
 import ConnectionRequests from "./components/professors/ConnectionRequests";
 import LeaderboardPage from "./components/professors/LeaderboardPage";
 import AdminDashboard from "./components/professors/admin/AdminDashboard";
+import DatabaseExplorer from "./components/pages/DatabaseExplorer";
 import MainLayout from "./components/layout/MainLayout";
 import HowItWorks from "./components/pages/HowItWorks";
 import HowItWorksDetailed from "./components/pages/HowItWorksDetailed";
@@ -86,13 +87,18 @@ function AppRoutes() {
           path="/professors"
           element={
             <MainLayout>
-              <ProfessorsLayout />
+              <ProfessorList />
             </MainLayout>
           }
-        >
-          <Route index element={<ProfessorList />} />
-          <Route path=":id" element={<ProfessorDetail />} />
-        </Route>
+        />
+        <Route
+          path="/professors/:id"
+          element={
+            <MainLayout>
+              <ProfessorDetail />
+            </MainLayout>
+          }
+        />
         <Route
           path="/create-professor-profile"
           element={
@@ -157,6 +163,16 @@ function AppRoutes() {
             <PrivateRoute>
               <MainLayout>
                 <AdminDashboard />
+              </MainLayout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/database-explorer"
+          element={
+            <PrivateRoute>
+              <MainLayout>
+                <DatabaseExplorer />
               </MainLayout>
             </PrivateRoute>
           }

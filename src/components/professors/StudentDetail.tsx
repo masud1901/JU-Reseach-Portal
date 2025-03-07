@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Mail } from "lucide-react";
+import { User, Mail, FileText, ExternalLink } from "lucide-react";
 import { useAuth } from "../../../supabase/auth";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -128,6 +128,78 @@ export default function StudentDetail() {
     .join("")
     .toUpperCase();
 
+  const [publications, setPublications] = useState<any[]>([]);
+  const [loadingPublications, setLoadingPublications] = useState(true);
+  const [workingWithProfessors, setWorkingWithProfessors] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (student) {
+      fetchStudentPublications();
+      fetchWorkingWithProfessors();
+    }
+  }, [student]);
+
+  async function fetchStudentPublications() {
+    try {
+      setLoadingPublications(true);
+      const { data, error } = await supabase
+        .from("publication_authors")
+        .select("*, publications(*)")
+        .eq("student_id", id);
+
+      if (error) throw error;
+
+      if (data) {
+        const publicationsData = data.map((item) => item.publications);
+        setPublications(publicationsData);
+      }
+    } catch (error) {
+      console.error("Error fetching student publications:", error);
+    } finally {
+      setLoadingPublications(false);
+    }
+  }
+
+  async function fetchWorkingWithProfessors() {
+    try {
+      // Find publications where this student is an author
+      const { data: pubData, error: pubError } = await supabase
+        .from("publication_authors")
+        .select("publication_id")
+        .eq("student_id", id);
+
+      if (pubError) throw pubError;
+
+      if (pubData && pubData.length > 0) {
+        const publicationIds = pubData.map((p) => p.publication_id);
+
+        // Find professors who are also authors on these publications
+        const { data: profData, error: profError } = await supabase
+          .from("publication_authors")
+          .select("professor_id, professors(id, name)")
+          .in("publication_id", publicationIds)
+          .not("professor_id", "is", null);
+
+        if (profError) throw profError;
+
+        if (profData) {
+          // Extract unique professors
+          const uniqueProfessors = Array.from(
+            new Set(
+              profData
+                .filter((item) => item.professor_id && item.professors)
+                .map((item) => JSON.stringify(item.professors)),
+            ),
+          ).map((str) => JSON.parse(str));
+
+          setWorkingWithProfessors(uniqueProfessors);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching collaborating professors:", error);
+    }
+  }
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -201,6 +273,30 @@ export default function StudentDetail() {
                     ))}
                   </div>
                 </div>
+
+                {workingWithProfessors.length > 0 && (
+                  <div className="w-full mt-6">
+                    <h3 className="text-sm font-medium mb-2 text-left">
+                      Working With
+                    </h3>
+                    <div className="flex flex-wrap gap-2 justify-start">
+                      {workingWithProfessors.map((professor, i) => (
+                        <Link to={`/professors/${professor.id}`} key={i}>
+                          <Avatar
+                            className="h-8 w-8 border-2 border-primary/10 hover:border-primary transition-colors cursor-pointer"
+                            title={professor.name}
+                          >
+                            <AvatarImage
+                              src={`https://api.dicebear.com/7.x/initials/svg?seed=${professor.name}`}
+                              alt={professor.name}
+                            />
+                            <AvatarFallback>{professor.name[0]}</AvatarFallback>
+                          </Avatar>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -211,6 +307,14 @@ export default function StudentDetail() {
             <TabsList className="mb-4">
               <TabsTrigger value="about">
                 <User className="mr-2 h-4 w-4" /> About
+              </TabsTrigger>
+              <TabsTrigger value="publications">
+                <FileText className="mr-2 h-4 w-4" /> Publications
+                {publications.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {publications.length}
+                  </Badge>
+                )}
               </TabsTrigger>
             </TabsList>
 
@@ -226,6 +330,64 @@ export default function StudentDetail() {
                     <p className="text-muted-foreground italic">
                       No biography provided.
                     </p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="publications">
+              <Card>
+                <CardContent className="pt-6">
+                  <h2 className="text-xl font-semibold mb-4">Publications</h2>
+                  {loadingPublications ? (
+                    <p className="text-muted-foreground">
+                      Loading publications...
+                    </p>
+                  ) : publications.length === 0 ? (
+                    <p className="text-muted-foreground italic">
+                      No publications found.
+                    </p>
+                  ) : (
+                    <div className="space-y-6">
+                      {publications.map((pub, index) => (
+                        <div
+                          key={index}
+                          className="border-b pb-4 last:border-0"
+                        >
+                          <h3 className="font-medium">{pub.title}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {pub.authors?.join(", ") || ""}
+                          </p>
+                          <div className="flex items-center gap-4 mt-2 text-sm">
+                            {pub.journal_name && (
+                              <span className="text-muted-foreground">
+                                {pub.journal_name}
+                              </span>
+                            )}
+                            {pub.publication_year && (
+                              <span className="text-muted-foreground">
+                                {pub.publication_year}
+                              </span>
+                            )}
+                            {pub.citation_count > 0 && (
+                              <Badge variant="outline">
+                                {pub.citation_count} citations
+                              </Badge>
+                            )}
+                          </div>
+                          {pub.url && (
+                            <Button
+                              variant="link"
+                              className="p-0 h-auto mt-2"
+                              onClick={() => window.open(pub.url, "_blank")}
+                            >
+                              View Publication
+                              <ExternalLink className="ml-1 h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </CardContent>
               </Card>

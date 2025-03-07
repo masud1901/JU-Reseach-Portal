@@ -81,3 +81,8 @@ INSERT INTO publications (title, authors, journal, year, citation_count, profess
 ('Novel Approaches to Prime Number Distribution', ARRAY['Anisur Khan', 'P. Smith'], 'Journal of Number Theory', 2021, 15, (SELECT id FROM professors WHERE name = 'Dr. Anisur Khan')),
 ('Isolation and Characterization of Bioactive Compounds from Medicinal Plants of Bangladesh', ARRAY['Kamal Hossain', 'R. Begum'], 'Journal of Natural Products', 2023, 8, (SELECT id FROM professors WHERE name = 'Dr. Kamal Hossain'))
 ON CONFLICT DO NOTHING;
+
+-- Insert admin user (using email lookup to get user_id)
+INSERT INTO admin_users (email) 
+VALUES ('akmolmasud5@gmail.com')
+ON CONFLICT (email) DO NOTHING;

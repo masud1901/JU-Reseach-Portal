@@ -166,6 +166,54 @@ export default function ProfessorDetail() {
     .join("")
     .toUpperCase();
 
+  const [workingWithStudents, setWorkingWithStudents] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (professor) {
+      fetchWorkingWithStudents();
+    }
+  }, [professor]);
+
+  async function fetchWorkingWithStudents() {
+    try {
+      // Find publications where this professor is an author
+      const { data: pubData, error: pubError } = await supabase
+        .from("publication_authors")
+        .select("publication_id")
+        .eq("professor_id", professor.id);
+
+      if (pubError) throw pubError;
+
+      if (pubData && pubData.length > 0) {
+        const publicationIds = pubData.map((p) => p.publication_id);
+
+        // Find students who are also authors on these publications
+        const { data: studentData, error: studentError } = await supabase
+          .from("publication_authors")
+          .select("student_id, students(id, name)")
+          .in("publication_id", publicationIds)
+          .not("student_id", "is", null);
+
+        if (studentError) throw studentError;
+
+        if (studentData) {
+          // Extract unique students
+          const uniqueStudents = Array.from(
+            new Set(
+              studentData
+                .filter((item) => item.student_id && item.students)
+                .map((item) => JSON.stringify(item.students)),
+            ),
+          ).map((str) => JSON.parse(str));
+
+          setWorkingWithStudents(uniqueStudents);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching collaborating students:", error);
+    }
+  }
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -281,6 +329,30 @@ export default function ProfessorDetail() {
                     ))}
                   </div>
                 </div>
+
+                {workingWithStudents.length > 0 && (
+                  <div className="w-full mt-6">
+                    <h3 className="text-sm font-medium mb-2 text-left">
+                      Working With Students
+                    </h3>
+                    <div className="flex flex-wrap gap-2 justify-start">
+                      {workingWithStudents.map((student, i) => (
+                        <Link to={`/students/${student.id}`} key={i}>
+                          <Avatar
+                            className="h-8 w-8 border-2 border-primary/10 hover:border-primary transition-colors cursor-pointer"
+                            title={student.name}
+                          >
+                            <AvatarImage
+                              src={`https://api.dicebear.com/7.x/initials/svg?seed=${student.name}`}
+                              alt={student.name}
+                            />
+                            <AvatarFallback>{student.name[0]}</AvatarFallback>
+                          </Avatar>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

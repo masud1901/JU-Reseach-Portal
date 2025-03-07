@@ -144,7 +144,13 @@ export default function ProfessorForm() {
           {
             user_id: user.id,
             name: formData.name,
-            department: formData.department,
+            department_id: (
+              await supabase
+                .from("departments")
+                .select("id")
+                .eq("name", formData.department)
+                .single()
+            ).data?.id,
             bio: formData.bio,
             google_scholar_id: formData.google_scholar_id,
             research_interests: formData.research_interests,

@@ -28,7 +28,7 @@ export default function ProfessorList() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [departments, setDepartments] = useState<string[]>([]);
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
 
@@ -82,9 +82,9 @@ export default function ProfessorList() {
           interest.toLowerCase().includes(searchQuery.toLowerCase()),
         );
 
-      // Filter by department
+      // Filter by department name
       const matchesDepartment =
-        selectedDepartment === "" ||
+        selectedDepartment === "all" ||
         professor.department === selectedDepartment;
 
       // Filter by verification status
@@ -156,7 +156,7 @@ export default function ProfessorList() {
                         <SelectValue placeholder="All Departments" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Departments</SelectItem>
+                        <SelectItem value="all">All Departments</SelectItem>
                         {departments.map((dept) => (
                           <SelectItem key={dept} value={dept}>
                             {dept}
