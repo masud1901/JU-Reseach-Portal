@@ -12,29 +12,29 @@ export type Database = {
       connection_requests: {
         Row: {
           created_at: string | null
-          from_user_id: string
+          from_user_id: string | null
           id: string
           message: string | null
-          status: string
-          to_user_id: string
+          status: string | null
+          to_user_id: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          from_user_id: string
+          from_user_id?: string | null
           id?: string
           message?: string | null
-          status?: string
-          to_user_id: string
+          status?: string | null
+          to_user_id?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          from_user_id?: string
+          from_user_id?: string | null
           id?: string
           message?: string | null
-          status?: string
-          to_user_id?: string
+          status?: string | null
+          to_user_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -44,19 +44,22 @@ export type Database = {
           created_at: string | null
           faculty_id: string | null
           id: string
-          name: string
+          name: string | null
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           faculty_id?: string | null
           id?: string
-          name: string
+          name?: string | null
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           faculty_id?: string | null
           id?: string
-          name?: string
+          name?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -72,32 +75,68 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          name: string
+          name: string | null
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
-          name: string
+          name?: string | null
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
-          name?: string
+          name?: string | null
+          updated_at?: string | null
         }
         Relationships: []
+      }
+      professor_research_keywords: {
+        Row: {
+          created_at: string | null
+          professor_id: string
+          research_keyword_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          professor_id: string
+          research_keyword_id: string
+        }
+        Update: {
+          created_at?: string | null
+          professor_id?: string
+          research_keyword_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professor_research_keywords_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professor_research_keywords_research_keyword_id_fkey"
+            columns: ["research_keyword_id"]
+            isOneToOne: false
+            referencedRelation: "research_keywords"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       professors: {
         Row: {
           badge: string | null
           bio: string | null
           created_at: string | null
-          department: string
+          department: string | null
           google_scholar_id: string | null
           id: string
           is_verified: boolean | null
-          name: string
+          name: string | null
           ranking_points: number | null
-          research_interests: string[]
+          research_interests: string[] | null
           seeking_students: boolean | null
           updated_at: string | null
           user_id: string | null
@@ -106,13 +145,13 @@ export type Database = {
           badge?: string | null
           bio?: string | null
           created_at?: string | null
-          department: string
+          department?: string | null
           google_scholar_id?: string | null
           id?: string
           is_verified?: boolean | null
-          name: string
+          name?: string | null
           ranking_points?: number | null
-          research_interests: string[]
+          research_interests?: string[] | null
           seeking_students?: boolean | null
           updated_at?: string | null
           user_id?: string | null
@@ -121,52 +160,104 @@ export type Database = {
           badge?: string | null
           bio?: string | null
           created_at?: string | null
-          department?: string
+          department?: string | null
           google_scholar_id?: string | null
           id?: string
           is_verified?: boolean | null
-          name?: string
+          name?: string | null
           ranking_points?: number | null
-          research_interests?: string[]
+          research_interests?: string[] | null
           seeking_students?: boolean | null
           updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
       }
+      publication_authors: {
+        Row: {
+          author_order: number | null
+          created_at: string | null
+          id: string
+          professor_id: string | null
+          publication_id: string | null
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          author_order?: number | null
+          created_at?: string | null
+          id?: string
+          professor_id?: string | null
+          publication_id?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          author_order?: number | null
+          created_at?: string | null
+          id?: string
+          professor_id?: string | null
+          publication_id?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publication_authors_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publication_authors_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "publications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publication_authors_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       publications: {
         Row: {
-          authors: string[]
+          authors: string[] | null
           citation_count: number | null
           created_at: string | null
           id: string
           journal: string | null
           professor_id: string | null
-          title: string
+          title: string | null
           updated_at: string | null
           url: string | null
           year: number | null
         }
         Insert: {
-          authors: string[]
+          authors?: string[] | null
           citation_count?: number | null
           created_at?: string | null
           id?: string
           journal?: string | null
           professor_id?: string | null
-          title: string
+          title?: string | null
           updated_at?: string | null
           url?: string | null
           year?: number | null
         }
         Update: {
-          authors?: string[]
+          authors?: string[] | null
           citation_count?: number | null
           created_at?: string | null
           id?: string
           journal?: string | null
           professor_id?: string | null
-          title?: string
+          title?: string | null
           updated_at?: string | null
           url?: string | null
           year?: number | null
@@ -181,15 +272,33 @@ export type Database = {
           },
         ]
       }
+      research_keywords: {
+        Row: {
+          created_at: string | null
+          id: string
+          keyword: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          keyword?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          keyword?: string | null
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           badge: string | null
           bio: string | null
           created_at: string | null
-          department: string
+          department: string | null
           id: string
-          name: string
-          research_interests: string[]
+          name: string | null
+          research_interests: string[] | null
           updated_at: string | null
           user_id: string | null
         }
@@ -197,10 +306,10 @@ export type Database = {
           badge?: string | null
           bio?: string | null
           created_at?: string | null
-          department: string
+          department?: string | null
           id?: string
-          name: string
-          research_interests: string[]
+          name?: string | null
+          research_interests?: string[] | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -208,10 +317,10 @@ export type Database = {
           badge?: string | null
           bio?: string | null
           created_at?: string | null
-          department?: string
+          department?: string | null
           id?: string
-          name?: string
-          research_interests?: string[]
+          name?: string | null
+          research_interests?: string[] | null
           updated_at?: string | null
           user_id?: string | null
         }

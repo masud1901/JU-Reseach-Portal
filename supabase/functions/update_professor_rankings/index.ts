@@ -1,3 +1,4 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.6";
 
 const corsHeaders = {
@@ -6,26 +7,20 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-Deno.serve(async (req) => {
-  // Handle CORS preflight request
+serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // Create a Supabase client with the Auth context of the logged in user
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
-        },
-      },
-    );
+    // Create a Supabase client with the service role key
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get all professors
-    const { data: professors, error: professorsError } = await supabaseClient
+    const { data: professors, error: professorsError } = await supabase
       .from("professors")
       .select("id");
 
@@ -33,50 +28,64 @@ Deno.serve(async (req) => {
       throw professorsError;
     }
 
-    // For each professor, calculate ranking points based on publications
-    for (const professor of professors) {
-      const { data: publications, error: publicationsError } =
-        await supabaseClient
-          .from("publications")
-          .select("citation_count, year")
-          .eq("professor_id", professor.id);
+    const currentYear = new Date().getFullYear();
+    let updatedCount = 0;
 
-      if (publicationsError) {
-        throw publicationsError;
+    // Update ranking points for each professor
+    for (const professor of professors) {
+      // Get all publications for this professor
+      const { data: publications, error: pubError } = await supabase
+        .from("publications")
+        .select("citation_count, year")
+        .eq("professor_id", professor.id);
+
+      if (pubError) {
+        console.error(
+          `Error fetching publications for professor ${professor.id}:`,
+          pubError,
+        );
+        continue;
       }
 
-      // Calculate ranking points based on publications and citations
-      // Formula: sum of (citation_count * recency_factor)
-      // where recency_factor gives more weight to recent publications
-      const currentYear = new Date().getFullYear();
+      // Calculate ranking points
       let rankingPoints = 0;
 
-      for (const pub of publications) {
-        if (pub.year && pub.citation_count) {
-          const yearsAgo = currentYear - pub.year;
-          const recencyFactor = Math.max(0.5, 1 - yearsAgo * 0.05); // Publications up to 10 years old get full weight
-          rankingPoints += Math.round(pub.citation_count * recencyFactor);
-        }
-      }
+      publications.forEach((pub) => {
+        // Base points for each publication
+        let points = 10;
 
-      // Add base points for each publication
-      rankingPoints += publications.length * 5;
+        // Add points for citations
+        points += pub.citation_count || 0;
 
-      // Update professor's ranking points
-      const { error: updateError } = await supabaseClient
+        // Apply recency factor (more recent publications get more weight)
+        const yearDiff = currentYear - (pub.year || currentYear);
+        const recencyFactor = Math.max(0.5, 1 - yearDiff * 0.1); // Minimum factor of 0.5
+
+        rankingPoints += points * recencyFactor;
+      });
+
+      // Update the professor's ranking points
+      const { error: updateError } = await supabase
         .from("professors")
-        .update({ ranking_points: rankingPoints })
+        .update({ ranking_points: Math.round(rankingPoints) })
         .eq("id", professor.id);
 
       if (updateError) {
-        throw updateError;
+        console.error(
+          `Error updating ranking points for professor ${professor.id}:`,
+          updateError,
+        );
+        continue;
       }
+
+      updatedCount++;
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Professor rankings updated successfully",
+        updatedCount,
+        message: `Successfully updated ranking points for ${updatedCount} professors.`,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -84,9 +93,15 @@ Deno.serve(async (req) => {
       },
     );
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      },
+    );
   }
 });

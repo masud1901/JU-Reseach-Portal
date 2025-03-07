@@ -22,7 +22,7 @@ export default function ImportPublicationsButton({
 
       // Call the import_google_scholar edge function
       const { data: functionData, error: functionError } =
-        await supabase.functions.invoke("import-google-scholar", {
+        await supabase.functions.invoke("import_google_scholar", {
           body: { professorId },
         });
 

@@ -24,15 +24,22 @@ export default function LeaderboardPage() {
   useEffect(() => {
     fetchProfessors();
     fetchDepartments();
-  }, []);
+  }, [selectedDepartment]);
 
   async function fetchProfessors() {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from("professors")
         .select("*")
         .order("ranking_points", { ascending: false });
+
+      // Apply department filter if selected
+      if (selectedDepartment) {
+        query = query.eq("department", selectedDepartment);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         throw error;

@@ -20,6 +20,7 @@ import LeaderboardPage from "./components/professors/LeaderboardPage";
 import AdminDashboard from "./components/professors/admin/AdminDashboard";
 import MainLayout from "./components/layout/MainLayout";
 import HowItWorks from "./components/pages/HowItWorks";
+import HowItWorksDetailed from "./components/pages/HowItWorksDetailed";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -120,7 +121,7 @@ function AppRoutes() {
           path="/how-it-works"
           element={
             <MainLayout>
-              <HowItWorks />
+              <HowItWorksDetailed />
             </MainLayout>
           }
         />

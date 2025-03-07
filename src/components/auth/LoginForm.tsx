@@ -13,21 +13,72 @@ import { Label } from "@/components/ui/label";
 import { useNavigate, Link } from "react-router-dom";
 import AuthLayout from "./AuthLayout";
 import { LogIn } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GraduationCap, User } from "lucide-react";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [userType, setUserType] = useState<"professor" | "student">(
+    "professor",
+  );
+  const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
-      await signIn(email, password);
+      const { data, error } = await signIn(email, password);
+      if (error) throw error;
+
+      // Check if the user has the correct profile type
+      if (data?.user) {
+        if (userType === "professor") {
+          const { data: professorData, error: professorError } = await supabase
+            .from("professors")
+            .select("*")
+            .eq("user_id", data.user.id)
+            .single();
+
+          if (professorError && professorError.code !== "PGRST116") {
+            throw professorError;
+          }
+
+          if (!professorData) {
+            // Redirect to create professor profile if they don't have one
+            navigate("/create-professor-profile");
+            return;
+          }
+        } else {
+          // Check for student profile
+          const { data: studentData, error: studentError } = await supabase
+            .from("students")
+            .select("*")
+            .eq("user_id", data.user.id)
+            .single();
+
+          if (studentError && studentError.code !== "PGRST116") {
+            throw studentError;
+          }
+
+          if (!studentData) {
+            // Redirect to create student profile if they don't have one
+            navigate("/create-student-profile");
+            return;
+          }
+        }
+      }
+
       navigate("/");
     } catch (error) {
       setError("Invalid email or password");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -40,6 +91,39 @@ export default function LoginForm() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <Tabs
+            defaultValue="professor"
+            value={userType}
+            onValueChange={(value) =>
+              setUserType(value as "professor" | "student")
+            }
+            className="w-full mb-4"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger
+                value="professor"
+                className="flex items-center gap-2"
+              >
+                <User className="h-4 w-4" /> Professor
+              </TabsTrigger>
+              <TabsTrigger value="student" className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" /> Student
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="professor">
+              <p className="text-sm text-muted-foreground mb-4">
+                Sign in as a professor to manage your research profile and
+                connect with students.
+              </p>
+            </TabsContent>
+            <TabsContent value="student">
+              <p className="text-sm text-muted-foreground mb-4">
+                Sign in as a student to discover research opportunities and
+                connect with professors.
+              </p>
+            </TabsContent>
+          </Tabs>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -64,8 +148,10 @@ export default function LoginForm() {
               />
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" className="w-full">
-              Sign in
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading
+                ? "Signing in..."
+                : `Sign in as ${userType === "professor" ? "Professor" : "Student"}`}
             </Button>
           </form>
         </CardContent>
