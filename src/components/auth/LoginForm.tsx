@@ -1,32 +1,32 @@
-import { useState } from "react";
-import { useAuth } from "../../../supabase/auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useNavigate, Link } from "react-router-dom";
-import AuthLayout from "./AuthLayout";
-import { LogIn } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GraduationCap, User } from "lucide-react";
-import { supabase } from "../../../supabase/supabase";
+import { useToast } from "@/components/ui/use-toast";
+import { GraduationCap, LogIn, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../supabase/auth";
+import AuthLayout from "./AuthLayout";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [userType, setUserType] = useState<"professor" | "student">(
-    "professor",
-  );
+  const [userType, setUserType] = useState<"professor" | "student">("professor");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [rememberMe, setRememberMe] = useState(false);
+  const { signIn, userRole } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,73 +35,64 @@ export default function LoginForm() {
 
     try {
       const { data, error } = await signIn(email, password);
-      if (error) throw error;
-
-      // Check if the user has the correct profile type
-      if (data?.user) {
-        // Check if user is an admin
-        const { data: adminData } = await supabase
-          .from("admin_users")
-          .select("*")
-          .eq("email", data.user.email)
-          .single();
-
-        if (adminData) {
-          // Admin users can access the admin dashboard
-          navigate("/admin");
-          return;
-        }
-
-        if (userType === "professor") {
-          const { data: professorData, error: professorError } = await supabase
-            .from("professors")
-            .select("*")
-            .eq("user_id", data.user.id)
-            .single();
-
-          if (professorError && professorError.code !== "PGRST116") {
-            throw professorError;
-          }
-
-          if (!professorData) {
-            // Redirect to create professor profile if they don't have one
-            navigate("/create-professor-profile");
-            return;
-          }
-        } else {
-          // Check for student profile
-          const { data: studentData, error: studentError } = await supabase
-            .from("students")
-            .select("*")
-            .eq("user_id", data.user.id)
-            .single();
-
-          if (studentError && studentError.code !== "PGRST116") {
-            throw studentError;
-          }
-
-          if (!studentData) {
-            // Redirect to create student profile if they don't have one
-            navigate("/create-student-profile");
-            return;
-          }
-        }
+      
+      if (error) {
+        throw error;
       }
 
-      navigate("/");
-    } catch (error) {
-      setError("Invalid email or password");
+      // If remember me is checked, store the email in localStorage
+      if (rememberMe) {
+        localStorage.setItem("rememberedEmail", email);
+      } else {
+        localStorage.removeItem("rememberedEmail");
+      }
+
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+        variant: "default",
+      });
+
+      // The redirect will be handled by the useEffect below
+      // which watches for changes in userRole
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setError(error.message || "Invalid email or password");
+      
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  // Load remembered email on component mount
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem("rememberedEmail");
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
+  // Redirect based on user role
+  useEffect(() => {
+    if (userRole === 'admin') {
+      navigate('/admin');
+    } else if (userRole === 'professor' || userRole === 'student') {
+      navigate('/dashboard');
+    }
+  }, [userRole, navigate]);
 
   return (
     <AuthLayout>
       <Card className="w-full">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center flex items-center justify-center gap-2">
-            <LogIn className="h-5 w-5" /> Sign in
+            <LogIn className="h-5 w-5" /> Sign in to your account
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -132,7 +123,7 @@ export default function LoginForm() {
             </TabsContent>
             <TabsContent value="student">
               <p className="text-sm text-muted-foreground mb-4">
-                Sign in as a student to discover research opportunities and
+                Sign in as a student to explore research opportunities and
                 connect with professors.
               </p>
             </TabsContent>
@@ -143,34 +134,56 @@ export default function LoginForm() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                placeholder="m.example@example.com"
                 type="email"
-                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="remember"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              />
+              <label
+                htmlFor="remember"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Remember me
+              </label>
+            </div>
+            {error && (
+              <div className="bg-destructive/15 text-destructive text-sm p-2 rounded-md">
+                {error}
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading
-                ? "Signing in..."
-                : `Sign in as ${userType === "professor" ? "Professor" : "Student"}`}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-center text-slate-600">
+          <div className="text-sm text-center text-muted-foreground">
             Don't have an account?{" "}
             <Link to="/signup" className="text-primary hover:underline">
               Sign up

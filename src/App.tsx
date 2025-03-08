@@ -4,11 +4,16 @@ import { Navigate, Route, Routes, useRoutes } from "react-router-dom";
 import routes from "tempo-routes";
 import { AuthProvider, useAuth } from "../supabase/auth";
 import DebugSupabase from "./components/DebugSupabase";
+import ForgotPassword from "./components/auth/ForgotPassword";
 import LoginForm from "./components/auth/LoginForm";
+import ProfileSettings from "./components/auth/ProfileSettings";
+import ResetPassword from "./components/auth/ResetPassword";
 import SignUpForm from "./components/auth/SignUpForm";
+import VerifyEmail from "./components/auth/VerifyEmail";
 import MainLayout from "./components/layout/MainLayout";
 import DatabaseExplorer from "./components/pages/DatabaseExplorer";
 import HowItWorksDetailed from "./components/pages/HowItWorksDetailed";
+import Terms from "./components/pages/Terms";
 import Dashboard from "./components/pages/dashboard.tsx";
 import Home from "./components/pages/home";
 import Success from "./components/pages/success";
@@ -29,7 +34,61 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/" />;
+    return <Navigate to="/login" />;
+  }
+
+  return <>{children}</>;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isAdmin } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return <>{children}</>;
+}
+
+function ProfessorRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isProfessor } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!isProfessor) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return <>{children}</>;
+}
+
+function StudentRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isStudent } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!isStudent) {
+    return <Navigate to="/dashboard" />;
   }
 
   return <>{children}</>;
@@ -61,6 +120,48 @@ function AppRoutes() {
             <MainLayout>
               <SignUpForm />
             </MainLayout>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <MainLayout>
+              <ForgotPassword />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <MainLayout>
+              <ResetPassword />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/verify-email"
+          element={
+            <MainLayout>
+              <VerifyEmail />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/terms"
+          element={
+            <MainLayout>
+              <Terms />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/profile-settings"
+          element={
+            <PrivateRoute>
+              <MainLayout>
+                <ProfileSettings />
+              </MainLayout>
+            </PrivateRoute>
           }
         />
         <Route
@@ -100,17 +201,21 @@ function AppRoutes() {
         <Route
           path="/create-professor-profile"
           element={
-            <MainLayout>
-              <ProfessorForm />
-            </MainLayout>
+            <PrivateRoute>
+              <MainLayout>
+                <ProfessorForm />
+              </MainLayout>
+            </PrivateRoute>
           }
         />
         <Route
           path="/create-student-profile"
           element={
-            <MainLayout>
-              <StudentForm />
-            </MainLayout>
+            <PrivateRoute>
+              <MainLayout>
+                <StudentForm />
+              </MainLayout>
+            </PrivateRoute>
           }
         />
         <Route
@@ -158,21 +263,21 @@ function AppRoutes() {
         <Route
           path="/admin"
           element={
-            <PrivateRoute>
+            <AdminRoute>
               <MainLayout>
                 <AdminDashboard />
               </MainLayout>
-            </PrivateRoute>
+            </AdminRoute>
           }
         />
         <Route
           path="/database-explorer"
           element={
-            <PrivateRoute>
+            <AdminRoute>
               <MainLayout>
                 <DatabaseExplorer />
               </MainLayout>
-            </PrivateRoute>
+            </AdminRoute>
           }
         />
         <Route path="/debug-supabase" element={<DebugSupabase />} />
