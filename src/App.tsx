@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Navigate, Route, Routes, useRoutes } from "react-router-dom";
 import routes from "tempo-routes";
 import { AuthProvider, useAuth } from "../supabase/auth";
+import DebugSupabase from "./components/DebugSupabase";
 import LoginForm from "./components/auth/LoginForm";
 import SignUpForm from "./components/auth/SignUpForm";
 import MainLayout from "./components/layout/MainLayout";
@@ -174,6 +175,7 @@ function AppRoutes() {
             </PrivateRoute>
           }
         />
+        <Route path="/debug-supabase" element={<DebugSupabase />} />
       </Routes>
       {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
     </>

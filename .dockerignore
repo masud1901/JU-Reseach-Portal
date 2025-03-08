@@ -1,14 +1,9 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# Dependencies
+# Node.js
 node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
 .pnp
 .pnp.js
 
@@ -19,10 +14,18 @@ dist-ssr
 build
 out
 
+# Environment variables (except the example)
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+.github
+
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+.vscode
 .idea
 .DS_Store
 *.suo
@@ -31,30 +34,27 @@ out
 *.sln
 *.sw?
 
-# Environment variables
-.env
-.env.*
-!.env.example
-.env.local
-.env.development
-.env.test
-.env.production
-
-# Supabase
-.supabase
-
 # Testing
 coverage
 .nyc_output
+__tests__
+**/*.test.js
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.js
+**/*.spec.ts
+**/*.spec.tsx
+
+# Documentation
+README.md
+*.md
+docs
 
 # Temporary files
 tmp
 temp
 *.tmp
 *.temp
-
-# Docker volumes
-docker/volumes
 
 # Debug files
 **/check-supabase*.html
@@ -69,3 +69,9 @@ docker/volumes
 .netlify
 .turbo
 .next
+.supabase
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore 

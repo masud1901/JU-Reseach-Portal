@@ -1,0 +1,32 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    restart: unless-stopped
+    depends_on:
+      - supabase-proxy
+
+  # This is a proxy to your Supabase project
+  supabase-proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      - SUPABASE_URL=${VITE_SUPABASE_URL:-${SUPABASE_FALLBACK_URL}}
+    command: caddy reverse-proxy --from :80 --to ${VITE_SUPABASE_URL:-${SUPABASE_FALLBACK_URL}}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5 

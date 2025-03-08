@@ -64,18 +64,21 @@ function readEnvFile() {
   }
 }
 
-// Hardcoded values as fallback
-const HARDCODED_URL = 'https://zzciimqdmffilxwwadwj.supabase.co';
-const HARDCODED_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp6Y2lpbXFkbWZmaWx4d3dhZHdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzNzcwNjgsImV4cCI6MjA1Njk1MzA2OH0.kfmQt9bVZo0KLgzrTOdsSnBARDkhzbbcOGPiAgiVIos';
-
 // Get environment variables
 const envVars = readEnvFile();
 
-// Get Supabase URL and key from environment variables or hardcoded values
-const supabaseUrl = envVars.VITE_SUPABASE_URL || HARDCODED_URL;
-const supabaseKey = envVars.VITE_SUPABASE_ANON_KEY || HARDCODED_KEY;
+// Get Supabase URL and key from environment variables
+const supabaseUrl = envVars.VITE_SUPABASE_URL || '';
+const supabaseKey = envVars.VITE_SUPABASE_ANON_KEY || '';
 
-console.log(`Using Supabase URL: ${supabaseUrl}`);
+// Check if we have the required environment variables
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Error: Missing Supabase credentials. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.');
+  process.exit(1);
+}
+
+console.log(`Using Supabase URL: ${supabaseUrl.substring(0, 8)}...`);
+console.log('Supabase key is configured');
 
 // Create Supabase client
 const supabase = createClient(supabaseUrl, supabaseKey);

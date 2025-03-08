@@ -1,0 +1,31 @@
+services:
+  app:
+    environment:
+      - NODE_ENV=production
+    restart: always
+    # Add production-specific configurations
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    # Use a volume for nginx logs
+    volumes:
+      - nginx_logs:/var/log/nginx
+
+  # Add a reverse proxy for SSL termination
+  nginx-proxy:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - app
+
+volumes:
+  nginx_logs: 

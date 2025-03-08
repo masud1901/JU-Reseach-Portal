@@ -1,0 +1,7 @@
+{
+  "name": "ju-research-portal-tools",
+  "version": "1.0.0",
+  "description": "Tools for JU Research Portal",
+  "type": "module",
+  "private": true
+} 

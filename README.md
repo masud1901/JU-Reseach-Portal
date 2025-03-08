@@ -24,6 +24,61 @@ This project requires environment variables to connect to Supabase. Follow these
 
 3. The `.env` file is gitignored to keep your credentials secure. Never commit your actual `.env` file to version control.
 
+## Docker Setup
+
+This project includes Docker configuration for easy deployment. The Docker setup is located in the `docker` directory.
+
+### Quick Start
+
+You can use the wrapper script to run Docker commands from anywhere in the project:
+
+```bash
+# Show help
+./docker-run.sh help
+
+# Start the development environment
+./docker-run.sh start
+
+# Start the production environment
+./docker-run.sh start-prod
+
+# Stop all containers
+./docker-run.sh stop
+```
+
+### Development
+
+To run the application in development mode using Docker:
+
+```bash
+./docker-run.sh start
+# or
+docker-compose -f docker/docker-compose.yml up
+```
+
+This will start the application and a proxy for Supabase.
+
+### Production
+
+For production deployment:
+
+```bash
+./docker-run.sh start-prod
+# or
+docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d
+```
+
+This will start the application with production-specific configurations, including an Nginx reverse proxy for SSL termination.
+
+### Docker Configuration Files
+
+- `docker/Dockerfile`: Multi-stage build for the React application
+- `docker/docker-compose.yml`: Base Docker Compose configuration
+- `docker/docker-compose.prod.yml`: Production-specific Docker Compose configuration
+- `docker/nginx/conf.d/default.conf`: Nginx configuration for the reverse proxy
+
+For more details, see the [Docker README](docker/README.md).
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
@@ -143,10 +198,93 @@ The anon key is designed to be public, but be careful not to share these scripts
 
 ## Troubleshooting
 
-If you encounter CORS errors with the HTML method, you may need to:
-1. Add your local file URL to the allowed origins in your Supabase dashboard
-2. Or host the HTML file on a simple local server
+### Supabase Connection Issues
 
-If you have issues with the Node.js or TypeScript scripts:
-1. Make sure you have the required dependencies installed
-2. Check that your `.env` file is in the root directory of your project
+If you encounter issues with the Supabase connection, you can use the following tools to diagnose the problem:
+
+1. **Check Environment Variables**:
+   ```bash
+   node tools/check-env.js
+   ```
+   This will show if your environment variables are being loaded correctly.
+
+2. **Test Supabase Functions**:
+   ```bash
+   node tools/check-functions.js
+   ```
+   This will test if the SQL functions are working correctly.
+
+3. **Browser Connection Test**:
+   Open the following URL in your browser:
+   ```
+   http://localhost:3000/check-supabase.html
+   ```
+   This will allow you to test the Supabase connection directly in the browser.
+
+### Docker Environment Variables
+
+If you're using Docker and encountering issues with environment variables, make sure:
+
+1. Your `.env` file is properly configured
+2. The environment variables are being passed to the Docker container
+3. The application is being rebuilt after changes to environment variables:
+   ```bash
+   ./docker-run.sh build
+   ./docker-run.sh start
+   ```
+
+## Security Best Practices
+
+### Environment Variables
+
+Always use environment variables for sensitive information. Never commit real credentials to the repository.
+
+1. Copy the `.env.example` file to create your own `.env` file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Fill in your actual Supabase credentials in the `.env` file:
+   ```
+   VITE_SUPABASE_URL=your_actual_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_actual_supabase_anon_key
+   ```
+
+3. The `.env` file is included in `.gitignore` to prevent accidental commits of sensitive information.
+
+### Security Audit Tool
+
+We provide a comprehensive security audit tool to help you identify and fix security issues:
+
+```bash
+./tools/security-audit.sh
+```
+
+This script will:
+- Check for the existence of a proper `.env` file
+- Ensure `.env` is included in `.gitignore`
+- Scan your codebase for potential leaked credentials
+- Offer to test your Supabase connection
+- Provide security recommendations
+
+Run this tool regularly, especially after making changes to your environment configuration.
+
+### Checking for Leaked Credentials
+
+For a quick check of leaked credentials, you can use:
+
+```bash
+./tools/check-leaks.sh
+```
+
+This script will scan your codebase for potential leaked credentials and provide guidance on how to fix any issues found.
+
+### Docker Environment Variables
+
+When using Docker, make sure your environment variables are properly configured:
+
+1. Ensure your `.env` file is correctly set up with your Supabase credentials.
+2. If you make changes to your `.env` file, you'll need to rebuild the Docker containers:
+   ```bash
+   ./docker-run.sh build
+   ```

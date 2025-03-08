@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../supabase/auth";
 import { supabase } from "../../../supabase/supabase";
+import ResearchInterestMatches from "../profiles/ResearchInterestMatches";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -18,7 +19,6 @@ const Dashboard = () => {
   const [studentProfile, setStudentProfile] = useState<any>(null);
   const [recentPublications, setRecentPublications] = useState<any[]>([]);
   const [connectionRequests, setConnectionRequests] = useState<any[]>([]);
-  const [matchingProfessors, setMatchingProfessors] = useState<any[]>([]);
   const [stats, setStats] = useState({
     publicationCount: 0,
     citationCount: 0,
@@ -137,53 +137,6 @@ const Dashboard = () => {
   
   async function fetchStudentData(studentId: string) {
     try {
-      // Fetch matching professors
-      const { data: studentKeywords, error: keywordsError } = await supabase
-        .from("student_research_keywords")
-        .select("research_keyword_id")
-        .eq("student_id", studentId);
-      
-      if (!keywordsError && studentKeywords && studentKeywords.length > 0) {
-        const keywordIds = studentKeywords.map(k => k.research_keyword_id);
-        
-        // Get professors with matching keywords
-        const { data: profKeywords, error: profKeywordsError } = await supabase
-          .from("professor_research_keywords")
-          .select("professor_id, research_keyword_id")
-          .in("research_keyword_id", keywordIds);
-        
-        if (!profKeywordsError && profKeywords) {
-          // Count matches per professor
-          const profMatches: Record<string, number> = {};
-          profKeywords.forEach(pk => {
-            profMatches[pk.professor_id] = (profMatches[pk.professor_id] || 0) + 1;
-          });
-          
-          // Get top 3 matching professors
-          const topProfIds = Object.entries(profMatches)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 3)
-            .map(entry => entry[0]);
-          
-          if (topProfIds.length > 0) {
-            const { data: professors, error: profError } = await supabase
-              .from("professors")
-              .select("*, departments(name)")
-              .in("id", topProfIds);
-            
-            if (!profError && professors) {
-              const profsWithMatches = professors.map(prof => ({
-                ...prof,
-                department: prof.departments?.name || "",
-                matchCount: profMatches[prof.id] || 0,
-              }));
-              
-              setMatchingProfessors(profsWithMatches);
-            }
-          }
-        }
-      }
-      
       // Fetch publications where student is an author
       const { data: authorData, error: authorError } = await supabase
         .from("publication_authors")
@@ -383,6 +336,11 @@ const Dashboard = () => {
               </CardContent>
             </Card>
             
+            {/* Research Matches */}
+            {professorProfile && (
+              <ResearchInterestMatches professorId={professorProfile.id} />
+            )}
+            
             {/* Recent Publications */}
             <Card>
               <CardHeader>
@@ -547,71 +505,9 @@ const Dashboard = () => {
             </Card>
             
             {/* Research Matches */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Research Matches</CardTitle>
-                <CardDescription>Professors with similar research interests</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {matchingProfessors.length === 0 ? (
-                  <div className="text-center py-6">
-                    <p className="text-muted-foreground">No matching professors found</p>
-                    <Button 
-                      variant="link" 
-                      onClick={() => navigate(`/students/${studentProfile.id}`)}
-                      className="mt-2"
-                    >
-                      Update your research interests
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {matchingProfessors.map((prof) => (
-                      <div key={prof.id} className="flex items-center justify-between border-b pb-4 last:border-0">
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${prof.name}`} />
-                            <AvatarFallback>
-                              {prof.name.split(" ").map(n => n[0]).join("").toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{prof.name}</p>
-                            <p className="text-sm text-muted-foreground">{prof.department}</p>
-                            <div className="flex items-center gap-1 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {prof.matchCount} shared interests
-                              </Badge>
-                              {prof.seeking_students && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Seeking Students
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => navigate(`/professors/${prof.id}`)}
-                        >
-                          View
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate("/professors?tab=matches")}
-                >
-                  Find More Matches
-                </Button>
-              </CardFooter>
-            </Card>
+            {studentProfile && (
+              <ResearchInterestMatches studentId={studentProfile.id} />
+            )}
             
             {/* Publications */}
             <Card>
