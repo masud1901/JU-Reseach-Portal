@@ -2,25 +2,33 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
 } from "@/components/ui/card";
+import { Professor } from "@/types/professor";
 import { CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Professor } from "@/types/professor";
 
 interface ProfessorCardProps {
-  professor: Professor;
+  professor: Professor & { matchScore?: number; matchingKeywords?: number };
+  showMatchScore?: boolean;
 }
 
-export default function ProfessorCard({ professor }: ProfessorCardProps) {
+export default function ProfessorCard({ professor, showMatchScore = false }: ProfessorCardProps) {
   const initials = professor.name
     .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase();
+
+  const getMatchColor = (score: number) => {
+    if (score >= 75) return "bg-green-100 text-green-800 border-green-300";
+    if (score >= 50) return "bg-blue-100 text-blue-800 border-blue-300";
+    if (score >= 25) return "bg-yellow-100 text-yellow-800 border-yellow-300";
+    return "bg-gray-100 text-gray-800 border-gray-300";
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -74,6 +82,19 @@ export default function ProfessorCard({ professor }: ProfessorCardProps) {
           <p className="text-sm text-muted-foreground mt-4 line-clamp-3">
             {professor.bio}
           </p>
+        )}
+        {showMatchScore && professor.matchScore !== undefined && (
+          <div className="mt-2 mb-3">
+            <div className={`text-xs font-medium px-2 py-1 rounded-full inline-flex items-center border ${getMatchColor(professor.matchScore)}`}>
+              <span className="mr-1">Match:</span>
+              <span className="font-bold">{professor.matchScore}%</span>
+            </div>
+            {professor.matchingKeywords !== undefined && professor.matchingKeywords > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {professor.matchingKeywords} shared research {professor.matchingKeywords === 1 ? 'interest' : 'interests'}
+              </p>
+            )}
+          </div>
         )}
       </CardContent>
       <CardFooter>

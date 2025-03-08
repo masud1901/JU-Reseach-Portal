@@ -1,27 +1,24 @@
+import { Toaster } from "@/components/ui/toaster";
 import { Suspense } from "react";
 import { Navigate, Route, Routes, useRoutes } from "react-router-dom";
 import routes from "tempo-routes";
+import { AuthProvider, useAuth } from "../supabase/auth";
 import LoginForm from "./components/auth/LoginForm";
 import SignUpForm from "./components/auth/SignUpForm";
-import Dashboard from "./components/pages/dashboard";
-import Success from "./components/pages/success";
+import MainLayout from "./components/layout/MainLayout";
+import DatabaseExplorer from "./components/pages/DatabaseExplorer";
+import HowItWorksDetailed from "./components/pages/HowItWorksDetailed";
+import Dashboard from "./components/pages/dashboard.tsx";
 import Home from "./components/pages/home";
-import { AuthProvider, useAuth } from "../supabase/auth";
-import { Toaster } from "@/components/ui/toaster";
-import ProfessorsLayout from "./components/pages/professors";
-import ProfessorList from "./components/professors/ProfessorList";
-import ProfessorDetail from "./components/professors/ProfessorDetail";
-import ProfessorForm from "./components/professors/ProfessorForm";
-import StudentList from "./components/professors/StudentList";
-import StudentDetail from "./components/professors/StudentDetail";
-import StudentForm from "./components/professors/StudentForm";
+import Success from "./components/pages/success";
 import ConnectionRequests from "./components/professors/ConnectionRequests";
 import LeaderboardPage from "./components/professors/LeaderboardPage";
+import ProfessorForm from "./components/professors/ProfessorForm";
+import ProfessorList from "./components/professors/ProfessorList";
+import StudentForm from "./components/professors/StudentForm";
+import StudentList from "./components/professors/StudentList";
 import AdminDashboard from "./components/professors/admin/AdminDashboard";
-import DatabaseExplorer from "./components/pages/DatabaseExplorer";
-import MainLayout from "./components/layout/MainLayout";
-import HowItWorks from "./components/pages/HowItWorks";
-import HowItWorksDetailed from "./components/pages/HowItWorksDetailed";
+import FallbackProfileDetail from "./components/profiles/FallbackProfileDetail";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -95,7 +92,7 @@ function AppRoutes() {
           path="/professors/:id"
           element={
             <MainLayout>
-              <ProfessorDetail />
+              <FallbackProfileDetail />
             </MainLayout>
           }
         />
@@ -143,7 +140,7 @@ function AppRoutes() {
           path="/students/:id"
           element={
             <MainLayout>
-              <StudentDetail />
+              <FallbackProfileDetail />
             </MainLayout>
           }
         />

@@ -2,7 +2,6 @@
 CREATE TABLE IF NOT EXISTS student_research_keywords (
     student_id UUID REFERENCES students(id),
     research_keyword_id UUID REFERENCES research_keywords(id),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (student_id, research_keyword_id)
 );
 

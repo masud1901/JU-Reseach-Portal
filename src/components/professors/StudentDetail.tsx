@@ -1,25 +1,25 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { supabase } from "../../../supabase/supabase";
-import { Student } from "@/types/professor";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Mail, FileText, ExternalLink } from "lucide-react";
-import { useAuth } from "../../../supabase/auth";
-import { useToast } from "@/components/ui/use-toast";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import { Student } from "@/types/professor";
+import { ExternalLink, FileText, Mail, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { useAuth } from "../../../supabase/auth";
+import { supabase } from "../../../supabase/supabase";
 
 export default function StudentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +28,9 @@ export default function StudentDetail() {
   const [connectMessage, setConnectMessage] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [publications, setPublications] = useState<any[]>([]);
+  const [loadingPublications, setLoadingPublications] = useState(true);
+  const [workingWithProfessors, setWorkingWithProfessors] = useState<any[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -36,6 +39,13 @@ export default function StudentDetail() {
       fetchStudent(id);
     }
   }, [id]);
+
+  useEffect(() => {
+    if (student && id) {
+      fetchStudentPublications();
+      fetchWorkingWithProfessors();
+    }
+  }, [student, id]);
 
   async function fetchStudent(studentId: string) {
     try {
@@ -105,40 +115,6 @@ export default function StudentDetail() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="container mx-auto py-8 px-4 flex justify-center items-center h-64">
-        <p>Loading student profile...</p>
-      </div>
-    );
-  }
-
-  if (!student) {
-    return (
-      <div className="container mx-auto py-8 px-4 text-center">
-        <h2 className="text-2xl font-bold mb-4">Student Not Found</h2>
-        <p>The student profile you're looking for doesn't exist.</p>
-      </div>
-    );
-  }
-
-  const initials = student.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
-
-  const [publications, setPublications] = useState<any[]>([]);
-  const [loadingPublications, setLoadingPublications] = useState(true);
-  const [workingWithProfessors, setWorkingWithProfessors] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (student) {
-      fetchStudentPublications();
-      fetchWorkingWithProfessors();
-    }
-  }, [student]);
-
   async function fetchStudentPublications() {
     try {
       setLoadingPublications(true);
@@ -199,6 +175,29 @@ export default function StudentDetail() {
       console.error("Error fetching collaborating professors:", error);
     }
   }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 px-4 flex justify-center items-center h-64">
+        <p>Loading student profile...</p>
+      </div>
+    );
+  }
+
+  if (!student) {
+    return (
+      <div className="container mx-auto py-8 px-4 text-center">
+        <h2 className="text-2xl font-bold mb-4">Student Not Found</h2>
+        <p>The student profile you're looking for doesn't exist.</p>
+      </div>
+    );
+  }
+
+  const initials = student.name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
 
   return (
     <div className="container mx-auto py-8 px-4">
