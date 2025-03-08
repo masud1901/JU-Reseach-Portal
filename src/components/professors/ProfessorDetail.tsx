@@ -1,40 +1,52 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge-dark";
+import { Button } from "@/components/ui/button-dark";
+import { Card, CardContent } from "@/components/ui/card-dark";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Professor, Publication } from "@/types/professor";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
-    CheckCircle2,
-    ExternalLink,
-    FileText,
-    Mail,
-    Plus,
-    Trophy,
-    User,
+  CheckCircle2,
+  ExternalLink,
+  FileText,
+  Mail,
+  Trophy,
+  User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
-import * as z from "zod";
+import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../../supabase/auth";
 import { supabase } from "../../../supabase/supabase";
 import ImportPublicationsButton from "./ImportPublicationsButton";
+import ProfileCompletionIndicator from "../profiles/ProfileCompletionIndicator";
+import EditProfileButton from "../profiles/EditProfileButton";
+import PublicationEditor from "../publications/PublicationEditor";
 
 export default function ProfessorDetail() {
   const { id } = useParams<{ id: string }>();
@@ -86,18 +98,50 @@ export default function ProfessorDetail() {
 
   async function fetchPublications(professorId: string) {
     try {
-      const { data, error } = await supabase
-        .from("publications")
-        .select("*")
-        .eq("professor_id", professorId)
-        .order("year", { ascending: false });
+      // Use the RPC function to get professor publications
+      const { data, error } = await supabase.rpc("get_professor_publications", {
+        p_id: professorId,
+      });
 
       if (error) {
         throw error;
       }
 
-      if (data) {
+      if (data && data.length > 0) {
+        console.log("Professor publications found:", data);
         setPublications(data as Publication[]);
+      } else {
+        console.log("No publications found for professor ID:", professorId);
+
+        // Fallback to direct query if RPC doesn't return results
+        const { data: directData, error: directError } = await supabase
+          .from("publications")
+          .select("*")
+          .eq("professor_id", professorId);
+
+        if (!directError && directData && directData.length > 0) {
+          console.log("Found publications through direct query:", directData);
+          setPublications(directData as Publication[]);
+        } else {
+          // Try through publication_authors table
+          const { data: authorData, error: authorError } = await supabase
+            .from("publication_authors")
+            .select("publication_id, publications(*)")
+            .eq("professor_id", professorId);
+
+          if (!authorError && authorData && authorData.length > 0) {
+            const extractedPubs = authorData
+              .map((item) => item.publications)
+              .filter(Boolean);
+            console.log(
+              "Found publications through authors table:",
+              extractedPubs,
+            );
+            setPublications(extractedPubs as Publication[]);
+          } else {
+            setPublications([]);
+          }
+        }
       }
     } catch (error) {
       console.error("Error fetching publications:", error);
@@ -150,6 +194,43 @@ export default function ProfessorDetail() {
     }
   }
 
+  const [workingWithStudents, setWorkingWithStudents] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (professor) {
+      fetchWorkingWithStudents();
+    }
+  }, [professor]);
+
+  async function fetchWorkingWithStudents() {
+    try {
+      if (!professor || !professor.id) return;
+
+      // Use the RPC function to get professor collaborators
+      const { data, error } = await supabase.rpc(
+        "get_professor_collaborators",
+        { p_id: professor.id },
+      );
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        console.log("Professor collaborators found:", data);
+        // Transform the data to match the expected format
+        const students = data.map((student) => ({
+          id: student.student_id,
+          name: student.student_name,
+        }));
+        setWorkingWithStudents(students);
+      } else {
+        console.log("No collaborators found for professor ID:", professor.id);
+        setWorkingWithStudents([]);
+      }
+    } catch (error) {
+      console.error("Error fetching collaborating students:", error);
+    }
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto py-8 px-4 flex justify-center items-center h-64">
@@ -173,305 +254,9 @@ export default function ProfessorDetail() {
     .join("")
     .toUpperCase();
 
-  const [workingWithStudents, setWorkingWithStudents] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (professor) {
-      fetchWorkingWithStudents();
-    }
-  }, [professor]);
-
-  async function fetchWorkingWithStudents() {
-    try {
-      // Find publications where this professor is an author
-      const { data: pubData, error: pubError } = await supabase
-        .from("publication_authors")
-        .select("publication_id")
-        .eq("professor_id", professor.id);
-
-      if (pubError) throw pubError;
-
-      if (pubData && pubData.length > 0) {
-        const publicationIds = pubData.map((p) => p.publication_id);
-
-        // Find students who are also authors on these publications
-        const { data: studentData, error: studentError } = await supabase
-          .from("publication_authors")
-          .select("student_id, students(id, name)")
-          .in("publication_id", publicationIds)
-          .not("student_id", "is", null);
-
-        if (studentError) throw studentError;
-
-        if (studentData) {
-          // Extract unique students
-          const uniqueStudents = Array.from(
-            new Set(
-              studentData
-                .filter((item) => item.student_id && item.students)
-                .map((item) => JSON.stringify(item.students)),
-            ),
-          ).map((str) => JSON.parse(str));
-
-          setWorkingWithStudents(uniqueStudents);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching collaborating students:", error);
-    }
-  }
-
-  function AddPublicationForm({ professorId, onSuccess }: { professorId: string, onSuccess: () => void }) {
-    const [loading, setLoading] = useState(false);
-    
-    // Define form schema
-    const formSchema = z.object({
-      title: z.string().min(5, "Title must be at least 5 characters"),
-      authors: z.string().min(3, "Authors must be at least 3 characters"),
-      journal_name: z.string().min(3, "Journal name must be at least 3 characters"),
-      publication_year: z.coerce.number().min(1900).max(new Date().getFullYear()),
-      publication_type: z.string().min(3, "Publication type must be at least 3 characters"),
-      url: z.string().url("Must be a valid URL").optional(),
-      citation_count: z.coerce.number().min(0, "Citations must be a positive number"),
-    });
-
-    // Initialize form
-    const form = useForm<z.infer<typeof formSchema>>({
-      resolver: zodResolver(formSchema),
-      defaultValues: {
-        title: "",
-        authors: "",
-        journal_name: "",
-        publication_year: new Date().getFullYear(),
-        publication_type: "Research Article",
-        url: "",
-        citation_count: 0,
-      },
-    });
-
-    // Handle form submission
-    const onSubmit = async (values: z.infer<typeof formSchema>) => {
-      try {
-        setLoading(true);
-        
-        // Convert authors string to array
-        const authorsArray = values.authors.split(',').map(author => author.trim());
-        
-        // Insert publication
-        const { data, error } = await supabase
-          .from('publications')
-          .insert([
-            {
-              professor_id: professorId,
-              title: values.title,
-              authors: authorsArray,
-              journal_name: values.journal_name,
-              publication_year: values.publication_year,
-              publication_type: values.publication_type,
-              url: values.url || null,
-              citation_count: values.citation_count,
-            }
-          ]);
-        
-        if (error) throw error;
-        
-        // Update professor's ranking points
-        await updateProfessorRankingPoints(professorId);
-        
-        toast({
-          title: "Publication added",
-          description: "Your publication has been added successfully",
-        });
-        
-        // Reset form and close dialog
-        form.reset();
-        onSuccess();
-        
-      } catch (error) {
-        console.error("Error adding publication:", error);
-        toast({
-          title: "Error",
-          description: "Failed to add publication. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    // Function to update professor's ranking points
-    async function updateProfessorRankingPoints(professorId: string) {
-      try {
-        // Get all publications for this professor
-        const { data: publications, error } = await supabase
-          .from('publications')
-          .select('citation_count, publication_year')
-          .eq('professor_id', professorId);
-        
-        if (error) throw error;
-        
-        // Calculate ranking points
-        let rankingPoints = 0;
-        const currentYear = new Date().getFullYear();
-        
-        publications.forEach((pub) => {
-          // Base points for each publication
-          let points = 10;
-          
-          // Add points for citations
-          points += pub.citation_count || 0;
-          
-          // Apply recency factor
-          const yearDiff = currentYear - (pub.publication_year || currentYear);
-          const recencyFactor = Math.max(0.5, 1 - yearDiff * 0.1);
-          
-          rankingPoints += points * recencyFactor;
-        });
-        
-        // Update professor's ranking points
-        const { error: updateError } = await supabase
-          .from('professors')
-          .update({ ranking_points: Math.round(rankingPoints) })
-          .eq('id', professorId);
-        
-        if (updateError) throw updateError;
-        
-      } catch (error) {
-        console.error("Error updating ranking points:", error);
-      }
-    }
-
-    return (
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Title</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="authors"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Authors</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormDescription>Comma-separated list of authors</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="journal_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Journal/Conference</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="publication_year"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Year</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="publication_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Publication Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Research Article">Research Article</SelectItem>
-                      <SelectItem value="Conference Paper">Conference Paper</SelectItem>
-                      <SelectItem value="Journal Article">Journal Article</SelectItem>
-                      <SelectItem value="Review Article">Review Article</SelectItem>
-                      <SelectItem value="Book Chapter">Book Chapter</SelectItem>
-                      <SelectItem value="Thesis">Thesis</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="citation_count"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Citations</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <FormField
-            control={form.control}
-            name="url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>URL (optional)</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <DialogFooter>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Adding..." : "Add Publication"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </Form>
-    );
-  }
-
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
         <div className="lg:col-span-1">
           <Card>
             <CardContent className="pt-6">
@@ -502,7 +287,7 @@ export default function ProfessorDetail() {
                   </span>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-6 justify-center">
+                <div className="flex flex-wrap gap-2 mb-4 justify-center">
                   {professor.badge && (
                     <Badge variant="outline">{professor.badge}</Badge>
                   )}
@@ -510,6 +295,25 @@ export default function ProfessorDetail() {
                     <Badge variant="secondary">Seeking Students</Badge>
                   )}
                 </div>
+
+                <div className="w-full mb-4">
+                  <ProfileCompletionIndicator
+                    profile={professor}
+                    profileType="professor"
+                  />
+                </div>
+
+                {isOwnProfile && (
+                  <EditProfileButton
+                    profileType="professor"
+                    profileId={professor.id}
+                    onProfileUpdated={() => {
+                      fetchProfessor(professor.id);
+                      fetchPublications(professor.id);
+                      fetchWorkingWithStudents();
+                    }}
+                  />
+                )}
 
                 <div className="space-y-2 mb-6 w-full">
                   {professor.google_scholar_id && (
@@ -649,32 +453,22 @@ export default function ProfessorDetail() {
             <TabsContent value="publications">
               <Card>
                 <CardContent className="pt-6">
-                  <h2 className="text-xl font-semibold mb-4">Publications</h2>
-                  {isOwnProfile && (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="ml-auto">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Publication
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
-                          <DialogTitle>Add Publication</DialogTitle>
-                          <DialogDescription>
-                            Add a new publication to your profile. This will also update your ranking points.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <AddPublicationForm 
-                          professorId={professor.id} 
-                          onSuccess={() => {
-                            fetchPublications();
-                            fetchProfessor();
-                          }} 
-                        />
-                      </DialogContent>
-                    </Dialog>
-                  )}
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">Publications</h2>
+                    {isOwnProfile && (
+                      <PublicationEditor
+                        mode="create"
+                        professorId={professor.id}
+                        onSuccess={() => {
+                          fetchPublications(professor.id);
+                          fetchProfessor(professor.id);
+                        }}
+                        buttonLabel="Add Publication"
+                        buttonVariant="outline"
+                        buttonSize="sm"
+                      />
+                    )}
+                  </div>
                   {publications.length === 0 ? (
                     <p className="text-muted-foreground italic">
                       No publications found.
@@ -691,14 +485,14 @@ export default function ProfessorDetail() {
                             {pub.authors.join(", ")}
                           </p>
                           <div className="flex items-center gap-4 mt-2 text-sm">
-                            {pub.journal && (
+                            {pub.journal_name && (
                               <span className="text-muted-foreground">
-                                {pub.journal}
+                                {pub.journal_name}
                               </span>
                             )}
-                            {pub.year && (
+                            {pub.publication_year && (
                               <span className="text-muted-foreground">
-                                {pub.year}
+                                {pub.publication_year}
                               </span>
                             )}
                             {pub.citation_count > 0 && (

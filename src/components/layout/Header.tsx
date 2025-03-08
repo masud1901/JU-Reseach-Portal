@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button-dark";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,47 +17,75 @@ export default function Header() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-background/70 transition-colors duration-300">
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center space-x-4">
           <Link to="/" className="font-bold text-xl">
             JU Research Portal
           </Link>
         </div>
-        <nav className="flex items-center space-x-4">
+        <nav className="flex items-center space-x-2 md:space-x-4">
           <Link to="/professors">
-            <Button variant="ghost">Professors</Button>
+            <Button variant="ghost" size="sm">
+              Professors
+            </Button>
           </Link>
           <Link to="/students">
-            <Button variant="ghost">Students</Button>
+            <Button variant="ghost" size="sm">
+              Students
+            </Button>
           </Link>
           <Link to="/leaderboard">
-            <Button variant="ghost">Leaderboard</Button>
+            <Button variant="ghost" size="sm" className="hidden md:inline-flex">
+              Leaderboard
+            </Button>
           </Link>
           <Link to="/how-it-works">
-            <Button variant="ghost">How It Works</Button>
+            <Button variant="ghost" size="sm" className="hidden md:inline-flex">
+              How It Works
+            </Button>
           </Link>
           {user && (
             <Link to="/connections">
-              <Button variant="ghost">Connections</Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden md:inline-flex"
+              >
+                Connections
+              </Button>
             </Link>
           )}
           {user && user.email === "akmolmasud5@gmail.com" && (
             <>
               <Link to="/admin">
-                <Button variant="ghost">Admin</Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden md:inline-flex"
+                >
+                  Admin
+                </Button>
               </Link>
               <Link to="/database-explorer">
-                <Button variant="ghost">Database Explorer</Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden md:inline-flex"
+                >
+                  Database Explorer
+                </Button>
               </Link>
             </>
           )}
 
+          <ThemeToggle />
+
           {user ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2">
+                  <Button variant="ghost" className="gap-2" size="sm">
                     <Avatar className="h-8 w-8">
                       <AvatarImage
                         src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
@@ -104,10 +133,16 @@ export default function Header() {
           ) : (
             <>
               <Link to="/login">
-                <Button variant="ghost">Sign In</Button>
+                <Button variant="ghost" size="sm">
+                  <span className="hidden md:inline">Sign In</span>
+                  <span className="inline md:hidden">Login</span>
+                </Button>
               </Link>
               <Link to="/signup">
-                <Button>Get Started</Button>
+                <Button size="sm">
+                  <span className="hidden md:inline">Get Started</span>
+                  <span className="inline md:hidden">Sign Up</span>
+                </Button>
               </Link>
             </>
           )}

@@ -35,55 +35,55 @@ export type Database = {
       }
       connection_requests: {
         Row: {
-          created_at: string | null
-          from_user_id: string | null
+          created_at: string
+          from_user_id: string
           id: string
           message: string | null
-          status: string | null
-          to_user_id: string | null
-          updated_at: string | null
+          status: string
+          to_user_id: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
-          from_user_id?: string | null
+          created_at?: string
+          from_user_id: string
           id?: string
           message?: string | null
-          status?: string | null
-          to_user_id?: string | null
-          updated_at?: string | null
+          status?: string
+          to_user_id: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
-          from_user_id?: string | null
+          created_at?: string
+          from_user_id?: string
           id?: string
           message?: string | null
-          status?: string | null
-          to_user_id?: string | null
-          updated_at?: string | null
+          status?: string
+          to_user_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
       departments: {
         Row: {
-          created_at: string | null
-          faculty_id: string | null
+          created_at: string
+          faculty_id: string
           id: string
-          name: string | null
-          updated_at: string | null
+          name: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
-          faculty_id?: string | null
+          created_at?: string
+          faculty_id: string
           id?: string
-          name?: string | null
-          updated_at?: string | null
+          name: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
-          faculty_id?: string | null
+          created_at?: string
+          faculty_id?: string
           id?: string
-          name?: string | null
-          updated_at?: string | null
+          name?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -97,38 +97,35 @@ export type Database = {
       }
       faculties: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
-          name: string | null
-          updated_at: string | null
+          name: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          name?: string | null
-          updated_at?: string | null
+          name: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          name?: string | null
-          updated_at?: string | null
+          name?: string
         }
         Relationships: []
       }
       professor_research_keywords: {
         Row: {
-          created_at: string | null
+          created_at: string
           professor_id: string
           research_keyword_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           professor_id: string
           research_keyword_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           professor_id?: string
           research_keyword_id?: string
         }
@@ -152,48 +149,54 @@ export type Database = {
       professors: {
         Row: {
           bio: string | null
-          created_at: string | null
+          created_at: string
           department_id: string | null
           google_scholar_id: string | null
           id: string
-          is_verified: boolean | null
-          name: string | null
-          ranking_points: number | null
-          research_interests: string[] | null
-          seeking_students: boolean | null
-          updated_at: string | null
+          is_verified: boolean
+          name: string
+          ranking_points: number
+          research_interests: string[]
+          seeking_students: boolean
+          updated_at: string
           user_id: string | null
-          verification_badge_type: string | null
+          verification_badge_type:
+            | Database["public"]["Enums"]["verification_badge_type_enum"]
+            | null
         }
         Insert: {
           bio?: string | null
-          created_at?: string | null
+          created_at?: string
           department_id?: string | null
           google_scholar_id?: string | null
           id?: string
-          is_verified?: boolean | null
-          name?: string | null
-          ranking_points?: number | null
-          research_interests?: string[] | null
-          seeking_students?: boolean | null
-          updated_at?: string | null
+          is_verified?: boolean
+          name: string
+          ranking_points?: number
+          research_interests?: string[]
+          seeking_students?: boolean
+          updated_at?: string
           user_id?: string | null
-          verification_badge_type?: string | null
+          verification_badge_type?:
+            | Database["public"]["Enums"]["verification_badge_type_enum"]
+            | null
         }
         Update: {
           bio?: string | null
-          created_at?: string | null
+          created_at?: string
           department_id?: string | null
           google_scholar_id?: string | null
           id?: string
-          is_verified?: boolean | null
-          name?: string | null
-          ranking_points?: number | null
-          research_interests?: string[] | null
-          seeking_students?: boolean | null
-          updated_at?: string | null
+          is_verified?: boolean
+          name?: string
+          ranking_points?: number
+          research_interests?: string[]
+          seeking_students?: boolean
+          updated_at?: string
           user_id?: string | null
-          verification_badge_type?: string | null
+          verification_badge_type?:
+            | Database["public"]["Enums"]["verification_badge_type_enum"]
+            | null
         }
         Relationships: [
           {
@@ -208,30 +211,30 @@ export type Database = {
       publication_authors: {
         Row: {
           author_order: number | null
-          created_at: string | null
+          created_at: string
           id: string
           professor_id: string | null
-          publication_id: string | null
+          publication_id: string
           student_id: string | null
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
           author_order?: number | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           professor_id?: string | null
-          publication_id?: string | null
+          publication_id: string
           student_id?: string | null
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
           author_order?: number | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           professor_id?: string | null
-          publication_id?: string | null
+          publication_id?: string
           student_id?: string | null
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -259,77 +262,94 @@ export type Database = {
       }
       publications: {
         Row: {
-          citation_count: number | null
-          created_at: string | null
+          authors: string[] | null
+          citation_count: number
+          created_at: string
           id: string
+          journal: string | null
           journal_name: string | null
+          professor_id: string | null
           publication_date: string | null
           publication_type: string | null
           publication_year: number | null
           publisher: string | null
-          title: string | null
-          updated_at: string | null
+          title: string
+          updated_at: string
           url: string | null
         }
         Insert: {
-          citation_count?: number | null
-          created_at?: string | null
+          authors?: string[] | null
+          citation_count?: number
+          created_at?: string
           id?: string
+          journal?: string | null
           journal_name?: string | null
+          professor_id?: string | null
           publication_date?: string | null
           publication_type?: string | null
           publication_year?: number | null
           publisher?: string | null
-          title?: string | null
-          updated_at?: string | null
+          title: string
+          updated_at?: string
           url?: string | null
         }
         Update: {
-          citation_count?: number | null
-          created_at?: string | null
+          authors?: string[] | null
+          citation_count?: number
+          created_at?: string
           id?: string
+          journal?: string | null
           journal_name?: string | null
+          professor_id?: string | null
           publication_date?: string | null
           publication_type?: string | null
           publication_year?: number | null
           publisher?: string | null
-          title?: string | null
-          updated_at?: string | null
+          title?: string
+          updated_at?: string
           url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "publications_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "professors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       research_keywords: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
-          keyword: string | null
+          keyword: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          keyword?: string | null
+          keyword: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
-          keyword?: string | null
+          keyword?: string
         }
         Relationships: []
       }
       student_research_keywords: {
         Row: {
-          created_at: string | null
+          created_at: string
           research_keyword_id: string
           student_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           research_keyword_id: string
           student_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           research_keyword_id?: string
           student_id?: string
         }
@@ -354,34 +374,37 @@ export type Database = {
         Row: {
           badge: string | null
           bio: string | null
-          created_at: string | null
+          created_at: string
           department_id: string | null
           id: string
-          name: string | null
-          research_interests: string[] | null
-          updated_at: string | null
+          name: string
+          ranking_points: number | null
+          research_interests: string[]
+          updated_at: string
           user_id: string | null
         }
         Insert: {
           badge?: string | null
           bio?: string | null
-          created_at?: string | null
+          created_at?: string
           department_id?: string | null
           id?: string
-          name?: string | null
-          research_interests?: string[] | null
-          updated_at?: string | null
+          name: string
+          ranking_points?: number | null
+          research_interests?: string[]
+          updated_at?: string
           user_id?: string | null
         }
         Update: {
           badge?: string | null
           bio?: string | null
-          created_at?: string | null
+          created_at?: string
           department_id?: string | null
           id?: string
-          name?: string | null
-          research_interests?: string[] | null
-          updated_at?: string | null
+          name?: string
+          ranking_points?: number | null
+          research_interests?: string[]
+          updated_at?: string
           user_id?: string | null
         }
         Relationships: [
@@ -396,16 +419,19 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      combined_leaderboard: {
+        Row: {
+          department_id: string | null
+          id: string | null
+          is_verified: boolean | null
+          name: string | null
+          ranking_points: number | null
+          role: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      add_professor_keyword: {
-        Args: {
-          p_id: string
-          keyword_text: string
-        }
-        Returns: undefined
-      }
       add_student_keyword: {
         Args: {
           s_id: string
@@ -413,9 +439,54 @@ export type Database = {
         }
         Returns: undefined
       }
-      calculate_ranking_points: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
+      get_combined_leaderboard: {
+        Args: {
+          limit_count?: number
+        }
+        Returns: {
+          id: string
+          name: string
+          role: string
+          department_id: string
+          department_name: string
+          ranking_points: number
+          is_verified: boolean
+        }[]
+      }
+      get_matching_professors_for_student: {
+        Args: {
+          student_id: string
+        }
+        Returns: {
+          professor_id: string
+          professor_name: string
+          department_id: string
+          department_name: string
+          match_count: number
+          is_verified: boolean
+          seeking_students: boolean
+        }[]
+      }
+      get_matching_students_for_professor: {
+        Args: {
+          professor_id: string
+        }
+        Returns: {
+          student_id: string
+          student_name: string
+          department_id: string
+          department_name: string
+          match_count: number
+        }[]
+      }
+      get_professor_collaborators: {
+        Args: {
+          p_id: string
+        }
+        Returns: {
+          student_id: string
+          student_name: string
+        }[]
       }
       get_professor_keywords: {
         Args: {
@@ -426,11 +497,51 @@ export type Database = {
           keyword: string
         }[]
       }
-      get_research_keywords: {
-        Args: Record<PropertyKey, never>
+      get_professor_publication_count: {
+        Args: {
+          p_id: string
+        }
+        Returns: number
+      }
+      get_professor_publications: {
+        Args: {
+          p_id: string
+        }
         Returns: {
           id: string
-          keyword: string
+          title: string
+          authors: string[]
+          journal_name: string
+          publication_year: number
+          citation_count: number
+          url: string
+          publication_type: string
+        }[]
+      }
+      get_professor_publications_paginated: {
+        Args: {
+          p_id: string
+          page_number?: number
+          page_size?: number
+        }
+        Returns: {
+          id: string
+          title: string
+          authors: string[]
+          journal_name: string
+          publication_year: number
+          citation_count: number
+          url: string
+          publication_type: string
+        }[]
+      }
+      get_student_collaborators: {
+        Args: {
+          s_id: string
+        }
+        Returns: {
+          professor_id: string
+          professor_name: string
         }[]
       }
       get_student_keywords: {
@@ -442,9 +553,92 @@ export type Database = {
           keyword: string
         }[]
       }
+      get_student_publication_count: {
+        Args: {
+          s_id: string
+        }
+        Returns: number
+      }
+      get_student_publications: {
+        Args: {
+          s_id: string
+        }
+        Returns: {
+          id: string
+          title: string
+          authors: string[]
+          journal_name: string
+          publication_year: number
+          citation_count: number
+          url: string
+          publication_type: string
+        }[]
+      }
+      get_student_publications_paginated: {
+        Args: {
+          s_id: string
+          page_number?: number
+          page_size?: number
+        }
+        Returns: {
+          id: string
+          title: string
+          authors: string[]
+          journal_name: string
+          publication_year: number
+          citation_count: number
+          url: string
+          publication_type: string
+        }[]
+      }
+      get_user_role: {
+        Args: {
+          user_id: string
+        }
+        Returns: string
+      }
+      is_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
+      is_professor: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
+      is_student: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
+      remove_student_keyword: {
+        Args: {
+          s_id: string
+          keyword_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      connection_status_enum: "pending" | "accepted" | "rejected" | "cancelled"
+      publication_type_enum:
+        | "journal_article"
+        | "conference_paper"
+        | "book_chapter"
+        | "book"
+        | "thesis"
+        | "other"
+        | "Research Article"
+        | "Conference Paper"
+        | "Journal Article"
+        | "Review Article"
+        | "Book Chapter"
+        | "Thesis"
+      verification_badge_type_enum: "none" | "verified" | "top_researcher"
     }
     CompositeTypes: {
       [_ in never]: never

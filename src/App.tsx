@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Navigate, Route, Routes, useRoutes } from "react-router-dom";
 import routes from "tempo-routes";
 import { AuthProvider, useAuth } from "../supabase/auth";
+import { ThemeProvider } from "@/components/ui/theme-provider";
 import DebugSupabase from "./components/DebugSupabase";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import LoginForm from "./components/auth/LoginForm";
@@ -25,6 +26,7 @@ import StudentForm from "./components/professors/StudentForm";
 import StudentList from "./components/professors/StudentList";
 import AdminDashboard from "./components/professors/admin/AdminDashboard";
 import FallbackProfileDetail from "./components/profiles/FallbackProfileDetail";
+import StudentDetail from "./components/professors/StudentDetail";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -95,6 +97,8 @@ function StudentRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
+  // Add console log to debug routes
+  console.log("Rendering AppRoutes");
   return (
     <>
       <Routes>
@@ -246,7 +250,7 @@ function AppRoutes() {
           path="/students/:id"
           element={
             <MainLayout>
-              <FallbackProfileDetail />
+              <StudentDetail />
             </MainLayout>
           }
         />
@@ -281,6 +285,9 @@ function AppRoutes() {
           }
         />
         <Route path="/debug-supabase" element={<DebugSupabase />} />
+        {import.meta.env.VITE_TEMPO === "true" && (
+          <Route path="/tempobook/*" element={<div />} />
+        )}
       </Routes>
       {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
     </>
@@ -289,12 +296,14 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Suspense fallback={<p>Loading...</p>}>
-        <AppRoutes />
-      </Suspense>
-      <Toaster />
-    </AuthProvider>
+    <ThemeProvider defaultTheme="dark">
+      <AuthProvider>
+        <Suspense fallback={<p>Loading...</p>}>
+          <AppRoutes />
+        </Suspense>
+        <Toaster />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

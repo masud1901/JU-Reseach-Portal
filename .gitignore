@@ -63,6 +63,10 @@ docker/volumes
 **/test-supabase*.js
 **/test-profile*.js
 
+# Tempo
+**/tempobook/dynamic/
+**/tempobook/storyboards/
+
 # Misc
 .cache
 .vercel
